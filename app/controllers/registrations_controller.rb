@@ -1,9 +1,14 @@
 class RegistrationsController < ApplicationController
 
   get '/register' do
+    if session[:tried_new]
+      @message = "You have to register first."
+    else
+      @message = "Welcome. Please register."
+    end
     erb :register
   end
-
+  
   # Registration!
   # You'll need a way to send the registration form here.
   # Use your battle-hardened text editor to create the
@@ -19,7 +24,10 @@ class RegistrationsController < ApplicationController
 
 
   get '/new' do
-    throw Unauthorized unless user_registered?
+    
+    session[:tried_new] = true unless user_registered?
+    redirect 'register' unless user_registered?
+    
     # keep this line of code in place to protect this sacred
     # page from interlopers who have not properly completed
     # the maze you are constructing. You will need to implement
@@ -32,6 +40,15 @@ class RegistrationsController < ApplicationController
     # have completed their quest
 
     # TODO: render the new user template and see what it says.
+    @email_address = session[:email]
+    erb :'new_user'
+    
+  end
+  
+  post '/new' do
+    session[:email] = params["email"]
+    session[:name] = params["name"]
+    redirect '/new'
   end
   # Bonus experience! The throw above makes an ugly error page happen.
   # Can you check for the same condition, but send them back to
@@ -41,7 +58,13 @@ class RegistrationsController < ApplicationController
   def user_registered?
     # TODO: you'll need a way for your registration to set a value that
     # will make this true when your /new looks at it.
-    false
+
+    session[:email].nil? && session[:name].nil? ? false : true
+  end
+  
+  get '/logout' do
+    session.clear
+    "You are logged out."
   end
 
 end
